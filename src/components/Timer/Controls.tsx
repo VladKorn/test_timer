@@ -12,6 +12,7 @@ interface Props {}
 
 const Controls = (props: Props) => {
 	const [isPaused, setIsPaused] = useState(true);
+	const [isClickInDelay, setIsClickInDelay] = useState(false);
 	useEffect(() => {
 		const sub = timerStore.isPaused$.subscribe(setIsPaused);
 		return () => sub.unsubscribe();
@@ -23,12 +24,20 @@ const Controls = (props: Props) => {
 			timerStore.isPaused$.next(true);
 		}
 	};
+
 	const toggle = () => {
+		if (isClickInDelay) return false;
+
 		timerStore.isPaused$.next(!isPaused);
+		setInterval(() => {
+			setIsClickInDelay(false);
+		}, 300);
+		setIsClickInDelay(true);
 	};
 	const reset = () => {
 		timerStore.reset$.next();
 	};
+
 	return (
 		<div className="timer-controls">
 			<Button
@@ -43,7 +52,10 @@ const Controls = (props: Props) => {
 				type="primary"
 				size="large"
 				disabled={
-					isPaused && timerStore.seconds$.value === 0 ? true : false
+					(isPaused && timerStore.seconds$.value === 0) ||
+					isClickInDelay
+						? true
+						: false
 				}
 				onClick={toggle}
 				icon={isPaused ? <PlayCircleFilled /> : <PauseCircleFilled />}
